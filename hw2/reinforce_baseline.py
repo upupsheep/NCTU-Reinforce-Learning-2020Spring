@@ -115,10 +115,13 @@ class Policy(nn.Module):
         eps = np.finfo(np.float32).eps.item()
 
         # calculate the true value using rewards returned from the environment
-        for r in self.rewards[::-1]:
-            # calculate the discounted value
-            R = r + gamma * R
-            returns.insert(0, R)
+        # print(len(self.rewards))
+        # print(saved_actions[0])
+        # exit(0)
+        for i, r in enumerate(self.rewards):
+            if i != len(self.rewards)-1:
+                _, next_state_value = saved_actions[i+1]
+                returns.append(r + gamma * next_state_value)
 
         returns = torch.tensor(returns)
         returns = (returns - returns.mean()) / (returns.std() + eps)

@@ -226,7 +226,7 @@ def train(lr=0.01):
             if not os.path.exists("preTrained"):
                 os.makedirs("preTrained")
             torch.save(model.state_dict(),
-                       './preTrained/CartPole_{}.pth'.format(lr))
+                       './preTrained/LunarLander_{}.pth'.format(lr))
             print("Solved! Running reward is now {} and "
                   "the last episode runs to {} time steps!".format(
                       ewma_reward, t))
