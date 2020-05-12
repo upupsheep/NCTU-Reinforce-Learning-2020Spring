@@ -5,6 +5,7 @@ import gym
 from itertools import count
 from collections import namedtuple
 import numpy as np
+import os
 
 import torch
 import torch.nn as nn
@@ -131,17 +132,9 @@ class Policy(nn.Module):
             # calculate critic (value) loss using L1 smooth loss
             value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
 
-        # reset gradients
-        # optimizer.zero_grad()
-
         # sum up all the values of policy_losses and value_losses
         loss = torch.stack(policy_losses).sum() + torch.stack(
             value_losses).sum()
-
-        # perform backprop
-        # loss.backward()
-        # optimizer.step()
-        # print('loss: ', loss)
 
         ########## END OF YOUR CODE ##########
 
@@ -194,7 +187,7 @@ def train(lr=0.01):
             # take the action
             state, reward, done, _ = env.step(action)
 
-            env.render()
+            # env.render()
 
             model.rewards.append(reward)
 
@@ -203,14 +196,18 @@ def train(lr=0.01):
                 break
 
         # reset gradients
-        # scheduler.zero_grad()
+        optimizer.zero_grad()
 
         loss = model.calculate_loss()
 
         # perform backprop
-        loss.backward(retain_graph=True)
+        # loss.backward(retain_graph=True)
+        loss.backward()
         # optimizer.step()
-        scheduler.step()
+        optimizer.step()
+
+        # reset rewards and action buffer
+        model.clear_memory()
 
         ########## END OF YOUR CODE ##########
 
@@ -222,6 +219,8 @@ def train(lr=0.01):
 
         # check if we have "solved" the cart pole problem
         if ewma_reward > env.spec.reward_threshold:
+            if not os.path.exists("preTrained"):
+                os.makedirs("preTrained")
             torch.save(model.state_dict(),
                        './preTrained/CartPole_{}.pth'.format(lr))
             print("Solved! Running reward is now {} and "
@@ -262,5 +261,6 @@ if __name__ == '__main__':
     env = gym.make('CartPole-v0')
     env.seed(random_seed)
     torch.manual_seed(random_seed)
+    print('threshhold: ', env.spec.reward_threshold)
     train(lr)
     test('CartPole_0.01.pth')
